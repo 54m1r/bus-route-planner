@@ -34,7 +34,7 @@
                         @foreach(\App\Station::all() as $station)
                             @if(isset($result))
                                 @if($station != $start)
-                                    <option value="{{ $destination->id }}">{{ $destination->name }}</option>
+                                    <option value="{{ $station->id }}">{{ $station->name }}</option>
                                 @endif
                             @else
                                 <option value="{{ $destination->id }}">{{ $destination->name }}</option>
