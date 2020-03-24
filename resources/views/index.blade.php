@@ -62,16 +62,16 @@
                 </div>
                 <div class="block-content block-content-full">
                     <ul class="list list-timeline list-timeline-modern pull-t">
-                        @foreach($path as $key => $value)
-                            @if($value[0] != $destination->name)
+                        @foreach($path as $item)
+                            @if($item['stations'][0] != $destination->name)
                                 <li>
-                                    <i class="list-timeline-icon bg-{{ \App\Route::where('name', '=', $key)->firstOrFail()->color }}">{{ \App\Route::where('name', '=', $key)->firstOrFail()->name }}</i>
+                                    <i class="list-timeline-icon bg-{{ \App\Route::where('name', '=', $item['route'])->firstOrFail()->color }}">{{ \App\Route::where('name', '=', $item['route'])->firstOrFail()->name }}</i>
                                     <div class="list-timeline-content">
-                                        <p class="font-w600">Von {{ $value[0] }} nach {{ $value[sizeof($value)-1] }}</p>
+                                        <p class="font-w600">Von {{ $item['stations'][0] }} nach {{ $item['stations'][sizeof($item['stations'])-1] }}</p>
                                         <div class="row">
                                             <div class="col-sm-6 col-xl-4">
                                                 <ol>
-                                                    @foreach($value as $item)
+                                                    @foreach($item['stations'] as $item)
                                                         <li>{{ $item }}</li>
                                                     @endforeach
                                                 </ol>
