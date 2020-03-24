@@ -6,7 +6,7 @@
 
         <title>VioDrip - Vio-V Bus Verbindungssuche</title>
 
-        <meta name="description" content="Codebase - Bootstrap 4 Admin Template &amp; UI Framework created by pixelcave and published on Themeforest">
+        <meta name="description" content="VioDrip - Vio-V Bus Verbindungssuche">
         <meta name="author" content="Samir">
         <meta name="robots" content="noindex, nofollow">
 
