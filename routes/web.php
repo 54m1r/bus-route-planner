@@ -114,7 +114,7 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
 
                             //echo "FOUNDSAAA: ";
                             //dump($founds[$routeStation->route->name]);
-                            if(array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 0)
+                            if(array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 1)
                                 if ($previousStation != null && $previousStation != $startStation) {
                                     if ($previousStation != null && $previous->station != $previousStation) {
                                         //echo $previous->station->name . ' != ' . $previousStation->name . '<br>';
@@ -176,7 +176,7 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
         }
     }
 
-    //dump($result);
+    //dd($result);
 
 
     $orderedResult = array();
