@@ -37,7 +37,7 @@
                                     <option value="{{ $station->id }}">{{ $station->name }}</option>
                                 @endif
                             @else
-                                <option value="{{ $destination->id }}">{{ $destination->name }}</option>
+                                <option value="{{ $station->id }}">{{ $station->name }}</option>
                             @endif
                         @endforeach
                     </select>
