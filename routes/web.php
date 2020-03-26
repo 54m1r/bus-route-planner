@@ -67,17 +67,26 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
     $start = 0;
     for ($i = 0; $i < 10; $i++) {
 
+        if($previousStation == $destinationStation) {
+            break;
+        }
+
         if (!($start + 1) > sizeof($path[0])) {
             break;
         }
 
         //echo($start.'<br>');
 
+        //echo 'searching from ' . $testStation->name . '<br><br>';
+
         $founds = array();
         //dump($testStation);
+
+        $rounds = 0;
         foreach ($testStation->routes as $routeStation) {
 
-            //dump($routeStations->route);
+            //echo 'Teste Linie: ' . $routeStation->route->name . ' <br>';
+            //echo 'Round: ' . $rounds . '<br><br>';
 
             //foreach ($path[0] as $station) {
             for ($b = $start; $b < sizeof($path[0]); $b++) {
@@ -88,6 +97,7 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
                 //dump($db_station->name);
                 //dump($db_station->routes);
                 $found = false;
+                //echo "2";
                 // dd($db_station);
 
                 $alreadyDone = array();
@@ -105,7 +115,7 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
                         $previous = \App\RouteStation::where('route_id', '=', $db_routes->route->id)->orderBy('id', 'DESC')->first();
                     }
 
-                    // echo($previous->station->name.' PRE <br>');
+                    //echo('PRE: '.$previous->station->name.' <br>');
 
                     //dump($previousStation);
 
@@ -114,31 +124,80 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
 
                             //echo "FOUNDSAAA: ";
                             //dump($founds[$routeStation->route->name]);
-                            if(array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 1)
+                            if (array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 1) {
                                 if ($previousStation != null && $previousStation != $startStation) {
                                     if ($previousStation != null && $previous->station != $previousStation) {
                                         //echo $previous->station->name . ' != ' . $previousStation->name . '<br>';
                                         break;
                                     }
                                 }
-                           // if ($previousStation != null)
-                                //echo $previous->station->name . ' === ' . $previousStation->name . '<br>';
-                            $founds[$routeStation->route->name] = $founds[$routeStation->route->name] + 1;
+                            }
+                            // if ($previousStation != null)
+                            //echo $previous->station->name . ' === ' . $previousStation->name . '<br>';
+                            if ($rounds == 0) {
+                                //dump(3);
+                                if (gettype($founds[$routeStation->route->name]) != "array") {
+                                   // dump(4);
+                                    //create subarray
+                                    $value = $founds[$routeStation->route->name];
+                                    $founds[$routeStation->route->name] = array();
+                                    $founds[$routeStation->route->name][0] = $value;
+                                    $founds[$routeStation->route->name][1] = 0;
+                                    //dd($founds);
+                                } else {
+                                    //dump(5);
+                                    $size = sizeof($founds[$routeStation->route->name]);
+                                    $founds[$routeStation->route->name][$size] = $founds[$routeStation->route->name];
+                                }
+                            }
+                            if (gettype($founds[$routeStation->route->name]) != "array") {
+                                $founds[$routeStation->route->name] = $founds[$routeStation->route->name] + 1;
+                            } //else {
+                                //$size = sizeof($founds[$routeStation->route->name]);
+                                //$founds[$routeStation->route->name][$size - 1] = $founds[$routeStation->route->name];
+                                //dd($founds);
+                            //}
+                            $rounds++;
+                            $found = true;
                         } else {
                             $founds[$routeStation->route->name] = 0;
+                            $rounds++;
+                            $found = true;
                         }
 
-                        $found = true;
-                        //echo $db_station->name . ' -> ' . $routeStation->route->name . '<br>';
+                        //if ($found) {
+                        //echo $db_station->name . ' -> ' . $routeStation->route->name . ' Round: ' . $rounds . '<br>';
+                        // }
                     }
                 }
                 if (!$found) {
+                    //echo '<br>';
+                    $rounds = 0;
                     break;
                 }
             }
         }
 
-       // dump('FOUNDS: ', $founds);
+         //dump('FOUNDS: ', $founds);
+
+        //dd($founds);
+
+        $keys = array_keys($founds);
+
+        for ($i = 0; $i < sizeof($founds); $i++) {
+            $item = $founds[$keys[$i]];
+            if (gettype($item) == "array") {
+                arsort($founds);
+                $first = array_key_first($item);
+                //dump($founds);
+                $founds[$keys[$i]] = $item[$first];
+               // dump($founds[$keys[$i]]);
+                ////dump()
+                //dd($founds);
+            }
+        }
+
+        //dump('FOUNDS: ', $founds);
 
         arsort($founds);
         $first = array_key_first($founds);
@@ -156,7 +215,9 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
         //$start = $i < $founds[$first];
         $start = $start + $founds[$first];
         //dump($founds);
-        if ($start >= sizeof($path[0])) $start = sizeof($path[0]) - 1;
+        if ($start >= sizeof($path[0])) {
+            $start = sizeof($path[0]) - 1;
+        }
 
         //dd($testStation);
 
@@ -176,8 +237,7 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
         }
     }
 
-    //dd($result);
-
+    //dump($result);
 
     $orderedResult = array();
 
@@ -207,22 +267,33 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
     $array = array('route' => $oldValue, 'stations' => $toOrder);
     array_push($orderedResult, $array);
 
-    // dd($orderedResult);
+    //dd($orderedResult);
 
     //dump($orderedResult);
 
     //foreach ($orderedResult as $item) {
-       // echo($item['route'].'<br>');
+    // echo($item['route'].'<br>');
     //}
 
     return view('index', ['path' => $orderedResult, 'result' => true, 'start' => $startStation, 'destination' => $destinationStation]);
 });
 
 Route::get('/routes', function () {
+    echo "Stationen: <br>";
+    $i = 0;
+    foreach (\App\Station::all() as $station) {
+        echo 'addMarker(' . $station->position['x'] . ', ' . $station->position['y'] . ', "static", "' . $station->name . '", \'bus-station\', true);';
+        echo '<br>';
+        $i++;
+    }
+
+    echo $i . '<br>';
+
     foreach (\App\Route::all() as $route) {
         echo '<b>' . $route->name . '</b><br>';
         foreach (App\RouteStation::where('route_id', '=', $route->id)->get() as $routeStation) {
             echo $routeStation->station->id . '. ' . $routeStation->station->name . '<br>';
+            //dd($routeStation->station->position['x']);
         }
     }
 });
@@ -233,7 +304,8 @@ Route::get('/setup/41ba0e97-44f4-419d-a38b-ca4af511b68d', function () {
     $busRoutes = json_decode("{\"1\":[10,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,21,54,55,56,57,58,59,60,61,62],\"2\":[10,65,3,67,5,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,85],\"3\":[10,87,88,89,90,91,6,93,94,95,96,97,85],\"4\":[10,101,61,102,103,51,105,106,107,108,157,110,111,113,114,115,21,60,11],\"850\":[1,121,122,123,75,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,36,155,156,11],\"X1\":[1,2,3,4,5,6,7,8,9,11],\"X2\":[12,13,14,15,16,17,48,19,20,21,22,23,24,25]}", true);
 
     foreach ($stations as $station) {
-        $db_station = App\Station::firstOrCreate(['name' => $station['Name']]);
+        if (\App\Station::where('name', '=', $station['Name'])->first() == null)
+            $db_station = App\Station::create(['name' => $station['Name'], 'position' => $station['Pos']]);
         foreach ($station['Routes'] as $route) {
             $db_route = App\Route::firstOrCreate(['name' => $route]);
         }
@@ -245,7 +317,8 @@ Route::get('/setup/41ba0e97-44f4-419d-a38b-ca4af511b68d', function () {
             $station = $stations[$busStation];
             //dd($station);
             $db_station = \App\Station::where('name', '=', $station['Name'])->first();
-            if ($db_station) App\RouteStation::create(['route_id' => $route->id, 'station_id' => $db_station->id]);
+            if ($db_station)
+                App\RouteStation::create(['route_id' => $route->id, 'station_id' => $db_station->id]);
         }
     }
 
@@ -259,4 +332,39 @@ Route::get('/setup/41ba0e97-44f4-419d-a38b-ca4af511b68d', function () {
  <21:18:48> "FIorian": 850 = schwarz
  <21:20:22> "FIorian": X2 = gelb
      */
+});
+
+Route::get('/nodes', function () {
+    ini_set('memory_limit', '-1');
+    $path = storage_path() . "/app/nodes.json"; // ie: /var/www/laravel/app/storage/json/filename.json
+    //dd($path);
+    $json = json_decode(file_get_contents($path), false);
+    foreach ($json as $item) {
+        //dd($json[40]);
+        $roads = array();
+        foreach ($json[40]->Nodes as $node) {
+            // dd($node);
+            if ($node->IsValidForGps) {
+                //echo 'addMarker('.$node->Position->X.', '.$node->Position->Y.', "static", "'.$node->StreetName.'", \'yellow-dot\', true);';
+                //echo '<br>';
+                if (!array_key_exists($node->StreetName, $roads)) {
+                    $roads[$node->StreetName] = array();
+                }
+                array_push($roads[$node->StreetName], array('X' => $node->Position->X, 'Y' => $node->Position->Y));
+            }
+        }
+
+        foreach ($roads['El Burro Blvd'] as $b) {
+            // echo 'addMarker('.$b['X'].', '.$b['Y'].', "static", "'.'El Burro Blvd'.'", \'yellow-dot\', true);';
+            echo ' {lat: ' . $b['X'] . ', lng: ' . $b['Y'] . '},';
+            echo '<br>';
+        }
+
+        //dd($item->DimensionMin);
+        //addMarker(-498.75, -1097.0, "static", "Adam's Apple Blvd", 'yellow-dot', true);
+        /*echo 'addMarker('.$item->DimensionMin->X.', '.$item->DimensionMin->Y.', "static", "Adam\'s Apple Blvd", \'yellow-dot\', true);';
+        echo '<br>';
+        echo 'addMarker('.$item->DimensionMax->X.', '.$item->DimensionMax->Y.', "static", "Adam\'s Apple Blvd", \'yellow-dot\', true);';
+        echo '<br>'; */
+    }
 });

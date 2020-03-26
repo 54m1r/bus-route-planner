@@ -12,4 +12,8 @@ class Station extends Model
     {
         return $this->hasMany(RouteStation::class, 'station_id');
     }
+
+    protected $casts = [
+        'position' => 'array'
+    ];
 }

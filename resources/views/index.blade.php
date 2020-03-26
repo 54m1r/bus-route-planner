@@ -72,7 +72,7 @@
                                             <div class="col-sm-6 col-xl-4">
                                                 <ol>
                                                     @foreach($item['stations'] as $item)
-                                                        <li>{{ $item }}</li>
+                                                         <li>{{ $item }}</li>
                                                     @endforeach
                                                 </ol>
                                             </div>
