@@ -12,6 +12,9 @@
 |
 */
 
+use NumberToWords\Locale\German;
+use NumberToWords\NumberToWords;
+
 Route::view('/', 'index');
 
 Route::post('/search', function () {
@@ -53,229 +56,256 @@ Route::get('route/{start}/{destination}', function ($start, $destination) {
 
     $path = $algorithm->shortestPaths($startStation->name, $destinationStation->name);
 
-    $fullPath = array();
+    $paths = array();
+    $routes = array();
 
-    $testStation = $startStation;
-    $previousStation = null;
-    //dd($startStation->routes);
+    foreach ($path as $p) {
 
-    //for($i = 0; $i<100;$i++) {
-    //dump($path);
+        //$fullPath = array();
 
-    $result = array();
+        //dd($path);
 
-    $start = 0;
-    for ($i = 0; $i < 10; $i++) {
+        $testStation = $startStation;
+        $previousStation = null;
+        //dd($startStation->routes);
 
-        if($previousStation == $destinationStation) {
-            break;
-        }
+        //for($i = 0; $i<100;$i++) {
+        //dump($path);
 
-        if (!($start + 1) > sizeof($path[0])) {
-            break;
-        }
+        $result = array();
 
-        //echo($start.'<br>');
+        $start = 0;
+        for ($i = 0; $i < 10; $i++) {
 
-        //echo 'searching from ' . $testStation->name . '<br><br>';
+            if ($previousStation == $destinationStation) {
+                break;
+            }
 
-        $founds = array();
-        //dump($testStation);
+            if (!($start + 1) > sizeof($p)) {
+                break;
+            }
 
-        $rounds = 0;
-        foreach ($testStation->routes as $routeStation) {
+            //echo($start.'<br>');
 
-            //echo 'Teste Linie: ' . $routeStation->route->name . ' <br>';
-            //echo 'Round: ' . $rounds . '<br><br>';
+            //echo 'searching from ' . $testStation->name . '<br><br>';
 
-            //foreach ($path[0] as $station) {
-            for ($b = $start; $b < sizeof($path[0]); $b++) {
-                //dump($b);
-                $db_station = \App\Station::where('name', '=', $path[0][$b])->first();
+            $founds = array();
+            //dump($testStation);
 
-                //dump($path[0][$b]);
-                //dump($db_station->name);
-                //dump($db_station->routes);
-                $found = false;
-                //echo "2";
-                // dd($db_station);
+            $rounds = 0;
+            foreach ($testStation->routes as $routeStation) {
 
-                $alreadyDone = array();
-                foreach ($db_station->routes as $db_routes) {
-                    if (in_array($db_routes->route->name, $alreadyDone)) {
-                        // dd($alreadyDone);
-                        continue;
-                    }
+                //echo 'Teste Linie: ' . $routeStation->route->name . ' <br>';
+                //echo 'Round: ' . $rounds . '<br><br>';
 
-                    array_push($alreadyDone, $db_routes->route->name);
-                    //dump($db_routes->route->name);
+                //foreach ($path[0] as $station) {
+                for ($b = $start; $b < sizeof($p); $b++) {
+                    //dump($b);
+                    $db_station = \App\Station::where('name', '=', $p[$b])->first();
 
-                    $previous = \App\RouteStation::where('id', '<', $db_routes->id)->where('route_id', '=', $db_routes->route->id)->orderBy('id', 'DESC')->first();
-                    if ($previous == null) {
-                        $previous = \App\RouteStation::where('route_id', '=', $db_routes->route->id)->orderBy('id', 'DESC')->first();
-                    }
+                    //dump($path[0][$b]);
+                    //dump($db_station->name);
+                    //dump($db_station->routes);
+                    $found = false;
+                    //echo "2";
+                    // dd($db_station);
 
-                    //echo('PRE: '.$previous->station->name.' <br>');
+                    $alreadyDone = array();
+                    foreach ($db_station->routes as $db_routes) {
+                        if (in_array($db_routes->route->name, $alreadyDone)) {
+                            // dd($alreadyDone);
+                            continue;
+                        }
 
-                    //dump($previousStation);
+                        array_push($alreadyDone, $db_routes->route->name);
+                        //dump($db_routes->route->name);
 
-                    if ($db_routes->route->id === $routeStation->route->id) {
-                        if (array_key_exists($routeStation->route->name, $founds)) {
+                        $previous = \App\RouteStation::where('id', '<', $db_routes->id)->where('route_id', '=', $db_routes->route->id)->orderBy('id', 'DESC')->first();
+                        if ($previous == null) {
+                            $previous = \App\RouteStation::where('route_id', '=', $db_routes->route->id)->orderBy('id', 'DESC')->first();
+                        }
 
-                            //echo "FOUNDSAAA: ";
-                            //dump($founds[$routeStation->route->name]);
-                            if (array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 1) {
-                                if ($previousStation != null && $previousStation != $startStation) {
-                                    if ($previousStation != null && $previous->station != $previousStation) {
-                                        //echo $previous->station->name . ' != ' . $previousStation->name . '<br>';
-                                        break;
+                        //echo('PRE: '.$previous->station->name.' <br>');
+
+                        //dump($previousStation);
+
+                        if ($db_routes->route->id === $routeStation->route->id) {
+                            if (array_key_exists($routeStation->route->name, $founds)) {
+
+                                //echo "FOUNDSAAA: ";
+                                //dump($founds[$routeStation->route->name]);
+                                if (array_key_exists($routeStation->route->name, $founds) && $founds[$routeStation->route->name] > 1) {
+                                    if ($previousStation != null && $previousStation != $startStation) {
+                                        if ($previousStation != null && $previous->station != $previousStation) {
+                                            //echo $previous->station->name . ' != ' . $previousStation->name . '<br>';
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            // if ($previousStation != null)
-                            //echo $previous->station->name . ' === ' . $previousStation->name . '<br>';
-                            if ($rounds == 0) {
-                                //dump(3);
-                                if (gettype($founds[$routeStation->route->name]) != "array") {
-                                   // dump(4);
-                                    //create subarray
-                                    $value = $founds[$routeStation->route->name];
-                                    $founds[$routeStation->route->name] = array();
-                                    $founds[$routeStation->route->name][0] = $value;
-                                    $founds[$routeStation->route->name][1] = 0;
-                                    //dd($founds);
-                                } else {
-                                    //dump(5);
-                                    $size = sizeof($founds[$routeStation->route->name]);
-                                    $founds[$routeStation->route->name][$size] = $founds[$routeStation->route->name];
+                                // if ($previousStation != null)
+                                //echo $previous->station->name . ' === ' . $previousStation->name . '<br>';
+                                if ($rounds == 0) {
+                                    //dump(3);
+                                    if (gettype($founds[$routeStation->route->name]) != "array") {
+                                        // dump(4);
+                                        //create subarray
+                                        $value = $founds[$routeStation->route->name];
+                                        $founds[$routeStation->route->name] = array();
+                                        $founds[$routeStation->route->name][0] = $value;
+                                        $founds[$routeStation->route->name][1] = 0;
+                                        //dd($founds);
+                                    } else {
+                                        //dump(5);
+                                        $size = sizeof($founds[$routeStation->route->name]);
+                                        $founds[$routeStation->route->name][$size] = $founds[$routeStation->route->name];
+                                    }
                                 }
-                            }
-                            if (gettype($founds[$routeStation->route->name]) != "array") {
-                                $founds[$routeStation->route->name] = $founds[$routeStation->route->name] + 1;
-                            } //else {
+                                if (gettype($founds[$routeStation->route->name]) != "array") {
+                                    $founds[$routeStation->route->name] = $founds[$routeStation->route->name] + 1;
+                                } //else {
                                 //$size = sizeof($founds[$routeStation->route->name]);
                                 //$founds[$routeStation->route->name][$size - 1] = $founds[$routeStation->route->name];
                                 //dd($founds);
-                            //}
-                            $rounds++;
-                            $found = true;
-                        } else {
-                            $founds[$routeStation->route->name] = 0;
-                            $rounds++;
-                            $found = true;
-                        }
+                                //}
+                                $rounds++;
+                                $found = true;
+                            } else {
+                                $founds[$routeStation->route->name] = 0;
+                                $rounds++;
+                                $found = true;
+                            }
 
-                        //if ($found) {
-                        //echo $db_station->name . ' -> ' . $routeStation->route->name . ' Round: ' . $rounds . '<br>';
-                        // }
+                            //if ($found) {
+                            //echo $db_station->name . ' -> ' . $routeStation->route->name . ' Round: ' . $rounds . '<br>';
+                            // }
+                        }
+                    }
+                    if (!$found) {
+                        //echo '<br>';
+                        $rounds = 0;
+                        break;
                     }
                 }
-                if (!$found) {
-                    //echo '<br>';
-                    $rounds = 0;
-                    break;
+            }
+
+            //dump('FOUNDS: ', $founds);
+
+            //dd($founds);
+
+            $keys = array_keys($founds);
+
+            for ($i = 0; $i < sizeof($founds); $i++) {
+                $item = $founds[$keys[$i]];
+                if (gettype($item) == "array") {
+                    arsort($founds);
+                    $first = array_key_first($item);
+                    //dump($founds);
+                    $founds[$keys[$i]] = $item[$first];
+                    // dump($founds[$keys[$i]]);
+                    ////dump()
+                    //dd($founds);
                 }
             }
+
+            //dump('FOUNDS: ', $founds);
+
+            arsort($founds);
+            $first = array_key_first($founds);
+            //dump($first);
+
+            //dump($start);
+
+            //echo '$founds[$first] '.($founds[$first]).'<br>';
+            for ($a = $start; $a <= $start + $founds[$first]; $a++) {
+                if ($a >= sizeof($p)) break;
+                //echo '$a '.$a.'<br>';
+                $result[$p[$a]] = $first;
+            }
+
+            //$start = $i < $founds[$first];
+            $start = $start + $founds[$first];
+            //dump($founds);
+            if ($start >= sizeof($p)) {
+                $start = sizeof($p) - 1;
+            }
+
+            //dd($testStation);
+
+            $previousStation = \App\Station::where('name', '=', $testStation->name)->firstOrFail();
+            //dump($previousStation->name);
+
+            $testStation = $p[$start];
+            $testStation = \App\Station::where('name', '=', $testStation)->first();
+            $previousStation = $testStation;
         }
 
-         //dump('FOUNDS: ', $founds);
+        //dump('RESULT: ', $result);
 
-        //dd($founds);
-
-        $keys = array_keys($founds);
-
-        for ($i = 0; $i < sizeof($founds); $i++) {
-            $item = $founds[$keys[$i]];
-            if (gettype($item) == "array") {
-                arsort($founds);
-                $first = array_key_first($item);
-                //dump($founds);
-                $founds[$keys[$i]] = $item[$first];
-               // dump($founds[$keys[$i]]);
-                ////dump()
-                //dd($founds);
+        foreach ($path as $item) {
+            foreach ($item as $station) {
+                $pointStation = \App\Station::where('name', '=', $station)->firstOrFail();
             }
         }
 
-        //dump('FOUNDS: ', $founds);
+        //dump($result);
 
-        arsort($founds);
-        $first = array_key_first($founds);
-        //dump($first);
+        $orderedResult = array();
+        $internal_routes = array();
 
-        //dump($start);
+        $stations = 0;
 
-        //echo '$founds[$first] '.($founds[$first]).'<br>';
-        for ($a = $start; $a <= $start + $founds[$first]; $a++) {
-            if ($a >= sizeof($path[0])) break;
-            //echo '$a '.$a.'<br>';
-            $result[$path[0][$a]] = $first;
-        }
+        $oldValue = null;
+        $toOrder = array();
+        foreach ($result as $key => $value) {
+            if ($oldValue == null)
+                $oldValue = $value;
 
-        //$start = $i < $founds[$first];
-        $start = $start + $founds[$first];
-        //dump($founds);
-        if ($start >= sizeof($path[0])) {
-            $start = sizeof($path[0]) - 1;
-        }
+            //echo $value.'<br>';
 
-        //dd($testStation);
+            $hasToEnd = false;
+            if ($oldValue != null && $oldValue != $value) {
+                //echo '<br>';
+                //array_push($orderedResult, $toOrder);
+                array_push($toOrder, $key);
+                array_push($internal_routes, $oldValue);
+                //$orderedResult[$oldValue] = $toOrder;
+                $array = array('route' => $oldValue, 'stations' => $toOrder);
+                array_push($orderedResult, $array);
+                $toOrder = array();
+                $oldValue = $value;
+            }
 
-        $previousStation = \App\Station::where('name', '=', $testStation->name)->firstOrFail();
-        //dump($previousStation->name);
-
-        $testStation = $path[0][$start];
-        $testStation = \App\Station::where('name', '=', $testStation)->first();
-        $previousStation = $testStation;
-    }
-
-    //dump('RESULT: ', $result);
-
-    foreach ($path as $item) {
-        foreach ($item as $station) {
-            $pointStation = \App\Station::where('name', '=', $station)->firstOrFail();
-        }
-    }
-
-    //dump($result);
-
-    $orderedResult = array();
-
-    $oldValue = null;
-    $toOrder = array();
-    foreach ($result as $key => $value) {
-        if ($oldValue == null)
-            $oldValue = $value;
-
-        //echo $value.'<br>';
-
-        $hasToEnd = false;
-        if ($oldValue != null && $oldValue != $value) {
-            //echo '<br>';
-            //array_push($orderedResult, $toOrder);
+            //echo $key.'<br>';
             array_push($toOrder, $key);
-            //$orderedResult[$oldValue] = $toOrder;
-            $array = array('route' => $oldValue, 'stations' => $toOrder);
-            array_push($orderedResult, $array);
-            $toOrder = array();
-            $oldValue = $value;
+            $stations++;
         }
+        $array = array('route' => $oldValue, 'stations' => $toOrder);
+        array_push($orderedResult, $array);
+        array_push($internal_routes, $oldValue);
+        //dd($orderedResult);
 
-        //echo $key.'<br>';
-        array_push($toOrder, $key);
+        //dump($orderedResult);
+
+        //foreach ($orderedResult as $item) {
+        // echo($item['route'].'<br>');
+        //}
+        $array = array();
+        $array['route'] = $orderedResult;
+        $array['routes'] = $internal_routes;
+        $array['stations'] = $stations;
+
+        array_push($paths, $array);
+        //array_push($routes, $orderedResult);
     }
-    $array = array('route' => $oldValue, 'stations' => $toOrder);
-    array_push($orderedResult, $array);
+    //dd($paths);
 
-    //dd($orderedResult);
+    $numberToWords = new NumberToWords();
 
-    //dump($orderedResult);
+// build a new number transformer using the RFC 3066 language identifier
+    $numberTransformer = $numberToWords->getNumberTransformer('de');
+    $count =  $numberTransformer->toWords(sizeof($paths));
 
-    //foreach ($orderedResult as $item) {
-    // echo($item['route'].'<br>');
-    //}
-
-    return view('index', ['path' => $orderedResult, 'result' => true, 'start' => $startStation, 'destination' => $destinationStation]);
+    return view('index', ['paths' => $paths, 'result' => true, 'start' => $startStation, 'destination' => $destinationStation, 'count' => $count, 'routes' => $routes]);
 });
 
 Route::get('/routes', function () {

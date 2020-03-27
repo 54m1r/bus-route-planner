@@ -14,6 +14,7 @@
         "fisharebest/algorithm": "^1.5",
         "fruitcake/laravel-cors": "^1.0",
         "guzzlehttp/guzzle": "^6.3",
+        "kwn/number-to-words": "^1.9",
         "laravel/framework": "^7.0",
         "laravel/tinker": "^2.0"
     },
